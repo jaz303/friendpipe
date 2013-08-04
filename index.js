@@ -1,3 +1,5 @@
+var fs = require('fs');
+
 doc = [
   "Usage:",
   "  friend add <nickname> <url>",
@@ -14,6 +16,42 @@ doc = [
 ];
 
 var opts = require('docopt').docopt(doc.join("\n"));
+
+function configFile() {
+  return process.env['HOME'] + '/.friendpipe';
+}
+
+function readConfig(cb) {
+  fs.exists(configFile(), function(exists) {
+    if (!exists) {
+      cb({});
+      return;
+    }
+    fs.readFile(configFile(), {encoding: 'utf8'}, function(err, data) {
+      if (err) {
+        process.stderr.write("error reading config file");
+        process.exit(1);
+      }
+      try {
+        cb(JSON.parse(data));
+      } catch (e) {
+        process.stderr.write("error parsing config file");
+        process.exit(1);
+      }
+    });
+  });
+}
+
+function writeConfig(cfg, cb) {
+  fs.writeFile(configFile(), JSON.stringify(cfg) + "\n", {encoding: 'utf8'}, function(err) {
+    if (err) {
+      process.stderr.write("error writing config file");
+      process.exit(1);
+    } else {
+      cb();
+    }
+  });
+}
 
 function parseSendOptions(opts) {
   var out = {};
@@ -36,7 +74,12 @@ function execSend(subjects, options) {
 }
 
 function execSet(key, value) {
-  console.log("setting", key, "=>", value);
+  readConfig(function(config) {
+    config[key] = value;
+    writeConfig(config, function() {
+
+    });
+  });
 }
 
 function showVersion() {
