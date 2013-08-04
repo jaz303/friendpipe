@@ -1,8 +1,10 @@
-var fs = require('fs');
-var NO_OP = function() {};
+var fs        = require('fs'),
+    protocols = require('./lib/protocols');
 
+function NO_OP() {}
 function out(line) { process.stdout.write(line + "\n"); }
 function err(line) { process.stderr.write(line + "\n"); }
+function exit(msg) { err(msg); process.exit(1); }
 
 doc = [
   "Usage:",
@@ -89,9 +91,20 @@ function parseSendOptions(opts) {
 }
 
 function execAdd(nickname, url) {
+
+  var protocol = protocols.protocolFromURL(url);
+  if (!protocol) {
+    exit("invalid friend URL: " + url);
+  }
+
+  if (!protocols.exists(protocol)) {
+    err("warning: support for protocol '" + protocol + "' is not installed");
+  }
+
   updateSettings(function(settings) {
     settings.friends[nickname] = url;
   });
+
 }
 
 function execRemove(nickname) {
