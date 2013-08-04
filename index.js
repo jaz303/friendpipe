@@ -10,7 +10,7 @@ doc = [
   "  friend -v | --version",
   "",
   "Options:",
-  "  -c --clipboard                 Extract file contents from clipboard",
+  //"  -c --clipboard                 Extract file contents from clipboard",
   "  -t TYPE --type=TYPE            Specify file MIME type explicitly",
   "  -s SUBJECT --subject=SUBJECT   Subject line for supporting adapters"
 ];
