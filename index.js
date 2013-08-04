@@ -1,9 +1,13 @@
 var fs = require('fs');
+var NO_OP = function() {};
+
+function out(line) { process.stdout.write(line + "\n"); }
+function err(line) { process.stderr.write(line + "\n"); }
 
 doc = [
   "Usage:",
   "  friend add <nickname> <url>",
-  "  friend update <nickname> <url>",
+  "  friend remove <nickname>",
   "  friend send [options] <nicknames-or-files>...",
   "  friend set <config-key> <config-value>",
   "  friend -h | --help",
@@ -15,39 +19,64 @@ doc = [
   "  -s SUBJECT --subject=SUBJECT   Subject line for supporting adapters"
 ];
 
-function configFile() {
+function version() {
+  return require('./package.json').version;
+}
+
+function fixSettings(settings) {
+  
+  if (!('friends' in settings)) {
+    settings.friends = {};
+  }
+  
+  if (!('config' in settings)) {
+    settings.config = {};
+  }
+  
+  return settings;
+
+}
+
+function settingsFile() {
   return process.env['HOME'] + '/.friendpipe';
 }
 
-function readConfig(cb) {
-  fs.exists(configFile(), function(exists) {
+function readSettings(cb) {
+  fs.exists(settingsFile(), function(exists) {
     if (!exists) {
-      cb({});
+      cb(fixSettings({}));
       return;
     }
-    fs.readFile(configFile(), {encoding: 'utf8'}, function(err, data) {
+    fs.readFile(settingsFile(), {encoding: 'utf8'}, function(err, data) {
       if (err) {
-        process.stderr.write("error reading config file");
+        err("error reading config file");
         process.exit(1);
       }
       try {
-        cb(JSON.parse(data));
+        cb(fixSettings(JSON.parse(data)));
       } catch (e) {
-        process.stderr.write("error parsing config file");
+        err("error parsing config file");
         process.exit(1);
       }
     });
   });
 }
 
-function writeConfig(cfg, cb) {
-  fs.writeFile(configFile(), JSON.stringify(cfg) + "\n", {encoding: 'utf8'}, function(err) {
+function writeSettings(cfg, cb) {
+  fs.writeFile(settingsFile(), JSON.stringify(cfg, null, 4) + "\n", {encoding: 'utf8'}, function(err) {
     if (err) {
-      process.stderr.write("error writing config file");
+      err("error writing config file");
       process.exit(1);
     } else {
       cb();
     }
+  });
+}
+
+function updateSettings(update, complete) {
+  readSettings(function(settings) {
+    var updatedSettings = update(settings);
+    writeSettings(updatedSettings || settings, complete || NO_OP);
   });
 }
 
@@ -60,11 +89,20 @@ function parseSendOptions(opts) {
 }
 
 function execAdd(nickname, url) {
-  console.log("adding:", nickname, url);
+  updateSettings(function(settings) {
+    settings.friends[nickname] = url;
+  });
 }
 
-function execUpdate(nickname, url) {
-  console.log("updating:", nickname, url);
+function execRemove(nickname) {
+  updateSettings(function(s) {
+    if (!(nickname in s.friends)) {
+      err("no such friend: " + nickname);
+      return false;
+    } else {
+      delete s.friends[nickname];
+    }
+  });
 }
 
 function execSend(subjects, options) {
@@ -72,16 +110,13 @@ function execSend(subjects, options) {
 }
 
 function execSet(key, value) {
-  readConfig(function(config) {
-    config[key] = value;
-    writeConfig(config, function() {
-
-    });
+  updateSettings(function(settings) {
+    settings.config[key] = value;
   });
 }
 
 function showVersion() {
-  console.log(module.version);
+  out(version());
 }
 
 exports.run = function() {
@@ -90,8 +125,8 @@ exports.run = function() {
     showVersion();
   } else if (opts.add) {
     execAdd(opts['<nickname>'], opts['<url>']);
-  } else if (opts.update) {
-    execUpdate(opts['<nickname>'], opts['<url>']);
+  } else if (opts.remove) {
+    execRemove(opts['<nickname>']);
   } else if (opts.send) {
     execSend(opts['<nicknames-or-files>'], parseSendOptions(opts));
   } else if (opts.set) {
@@ -99,4 +134,8 @@ exports.run = function() {
   } else {
     throw "unknown command! :(";
   }
+}
+
+if (!module.parent) {
+  exports.run();
 }
