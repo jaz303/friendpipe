@@ -2,7 +2,9 @@
 
 Send files to your friends from the command line.
 
-Inspired by ...
+Inspired by [#86 Friend Pipe](https://github.com/samsquire/ideas#86-friend-pipe)
+
+## Unfinished! The below is just the proposed API.
 
 ## Install
 
