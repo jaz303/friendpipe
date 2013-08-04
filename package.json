@@ -1,6 +1,9 @@
 {
   "name": "friendpipe",
   "version": "0.0.1",
+  "bin": {
+  	"friend": "./bin/friend"
+  },
   "dependencies": {
     "docopt": "~0.4.0"
   }

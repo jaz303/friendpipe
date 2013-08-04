@@ -15,8 +15,6 @@ doc = [
   "  -s SUBJECT --subject=SUBJECT   Subject line for supporting adapters"
 ];
 
-var opts = require('docopt').docopt(doc.join("\n"));
-
 function configFile() {
   return process.env['HOME'] + '/.friendpipe';
 }
@@ -86,16 +84,19 @@ function showVersion() {
   console.log(module.version);
 }
 
-if (opts['-v'] || opts['--version']) {
-  showVersion();
-} else if (opts.add) {
-  execAdd(opts['<nickname>'], opts['<url>']);
-} else if (opts.update) {
-  execUpdate(opts['<nickname>'], opts['<url>']);
-} else if (opts.send) {
-  execSend(opts['<nicknames-or-files>'], parseSendOptions(opts));
-} else if (opts.set) {
-  execSet(opts['<config-key>'], opts['<config-value>']);
-} else {
-  throw "unknown command! :(";
+exports.run = function() {
+  var opts = require('docopt').docopt(doc.join("\n")); 
+  if (opts['-v'] || opts['--version']) {
+    showVersion();
+  } else if (opts.add) {
+    execAdd(opts['<nickname>'], opts['<url>']);
+  } else if (opts.update) {
+    execUpdate(opts['<nickname>'], opts['<url>']);
+  } else if (opts.send) {
+    execSend(opts['<nicknames-or-files>'], parseSendOptions(opts));
+  } else if (opts.set) {
+    execSet(opts['<config-key>'], opts['<config-value>']);
+  } else {
+    throw "unknown command! :(";
+  }
 }
