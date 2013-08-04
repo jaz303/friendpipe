@@ -8,8 +8,9 @@ doc = [
   "  friend -v | --version",
   "",
   "Options:",
-  "  -c --clipboard       Extract file contents from clipboard",
-  "  -t TYPE --type=TYPE  Specify file MIME type explicitly"
+  "  -c --clipboard                 Extract file contents from clipboard",
+  "  -t TYPE --type=TYPE            Specify file MIME type explicitly",
+  "  -s SUBJECT --subject=SUBJECT   Subject line for supporting adapters"
 ];
 
 var opts = require('docopt').docopt(doc.join("\n"));
@@ -17,7 +18,8 @@ var opts = require('docopt').docopt(doc.join("\n"));
 function parseSendOptions(opts) {
   var out = {};
   out.clipboard = !!opts['--clipboard'];
-  out.mimeType = opts['--type'];
+  out.mimeType = opts['--type'] || null;
+  out.subject = opts['--subject'] || null;
   return out;
 }
 
