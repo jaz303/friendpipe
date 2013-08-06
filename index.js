@@ -124,6 +124,11 @@ function execSend(subjects, options) {
 
 function execSet(key, value) {
   updateSettings(function(settings) {
+    if (value === 'true' || value === 'yes') {
+      value = true;
+    } else if (value === 'false' || value === 'no') {
+      value = false;
+    }
     settings.config[key] = value;
   });
 }
